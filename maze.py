@@ -3,6 +3,7 @@ from models import World, Pacman
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
+BLOCK_SIZE = 40
 
 
 class ModelSprite(arcade.Sprite):
@@ -29,16 +30,48 @@ class MazeWindow(arcade.Window):
         self.world = World(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.pacman_sprite = ModelSprite('images/pacman.png',
                                          model=self.world.pacman)
+        self.maze_drawer = MazeDrawer(self.world.maze)
 
     def update(self, delta):
         self.world.update(delta)
 
     def on_draw(self):
         arcade.start_render()
+        # make sure you call this before drawing pacman sprite
+        self.maze_drawer.draw()
         self.pacman_sprite.draw()
+
 
     def on_key_press(self, key, key_modifiers):
         self.world.on_key_press(key, key_modifiers)
+
+
+class MazeDrawer():
+    def __init__(self, maze):
+        self.maze = maze
+        self.width = self.maze.width
+        self.height = self.maze.height
+
+        self.wall_sprite = arcade.Sprite('images/wall.png')
+        self.dot_sprite = arcade.Sprite('images/dot.png')
+
+    def get_sprite_position(self, r, c):
+        x = c * BLOCK_SIZE + (BLOCK_SIZE // 2)
+        y = r * BLOCK_SIZE + (BLOCK_SIZE + (BLOCK_SIZE // 2))
+        return x, y
+
+    def draw_sprite(self, sprite, r, c):
+        x, y = self.get_sprite_position(r, c)
+        sprite.set_position(x, y)
+        sprite.draw()
+ 
+    def draw(self):
+        for r in range(self.height):
+            for c in range(self.width):
+                if self.maze.has_wall_at(r,c):
+                    self.draw_sprite(self.wall_sprite, r, c)
+                elif self.maze.has_dot_at(r,c):
+                    self.draw_sprite(self.dot_sprite, r, c)
 
 
 def main():
